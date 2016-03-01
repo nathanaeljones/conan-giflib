@@ -18,6 +18,7 @@ class ZlibNgConan(ConanFile):
     exports = ["FindGIF.cmake"]
     
     def config(self):
+        del self.settings.os.windows
         del self.settings.compiler.libcxx # Its a C only library
 
     def source(self):
