@@ -15,9 +15,9 @@ class ZlibNgConan(ConanFile):
     default_options = "shared=False"
     url="http://github.com/lasote/conan-zlib-ng"
     license="https://github.com/Dead2/zlib-ng/blob/ba7f0eb6e294306ac6d771216ea4442f2ea2d830/LICENSE.md"
+    exports = ["FindGIF.cmake"]
     
     def config(self):
-        del self.settings.os.windows
         del self.settings.compiler.libcxx # Its a C only library
 
     def source(self):
@@ -44,6 +44,9 @@ class ZlibNgConan(ConanFile):
             self.run("cd %s && %s make" % (self.ZIP_FOLDER_NAME, env.command_line))
  
     def package(self):
+        # Copy FindGIF.cmake to package
+        self.copy("FindGIF.cmake", ".", ".")
+        
         # Copying zlib.h, zutil.h, zconf.h
         self.copy("*.h", "include", "%s" % (self.ZIP_FOLDER_NAME), keep_path=False)
         self.copy("*.h", "include", "%s" % ("_build"), keep_path=False)
