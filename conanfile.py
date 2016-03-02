@@ -7,23 +7,25 @@ from conans import CMake, ConfigureEnvironment
 class ZlibNgConan(ConanFile):
     name = "giflib"
     version = "5.1.2"
-    git_sha = "4c57b930edf5590d7587eec0f82d781e2f1218f8"
-    ZIP_FOLDER_NAME = "giflib-code-%s" % git_sha 
+    ZIP_FOLDER_NAME = "giflib-%s" % version 
     generators = "cmake"
     settings = "os", "arch", "compiler", "build_type"
     options = {"shared": [True, False]}
     default_options = "shared=False"
     url="http://github.com/lasote/conan-zlib-ng"
-    license="https://github.com/Dead2/zlib-ng/blob/ba7f0eb6e294306ac6d771216ea4442f2ea2d830/LICENSE.md"
+    license="https://sourceforge.net/p/giflib/code/ci/master/tree/COPYING"
     exports = ["FindGIF.cmake"]
     
     def config(self):
-        del self.settings.os.windows
-        del self.settings.compiler.libcxx # Its a C only library
+        try: # Try catch can be removed when conan 0.8 is released
+            del self.settings.compiler.libcxx
+            del self.settings.os.windows 
+        except: 
+            pass
 
     def source(self):
-        zip_name = "%s.zip" % self.ZIP_FOLDER_NAME
-        download("http://sourceforge.net/code-snapshots/git/g/gi/giflib/code.git/%s" % zip_name, zip_name)
+        zip_name = "%s.tar.gz" % self.ZIP_FOLDER_NAME
+        download("http://downloads.sourceforge.net/project/giflib/%s" % zip_name, zip_name)
         unzip(zip_name)
         os.unlink(zip_name)
         if self.settings.os != "Windows":
