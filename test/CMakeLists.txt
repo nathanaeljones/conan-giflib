@@ -6,7 +6,7 @@ CONAN_BASIC_SETUP()
 find_package("GIF")
 
 IF(GIF_FOUND)
-	ADD_EXECUTABLE(gifcolor gifcolor.c qprintf.c)
+	ADD_EXECUTABLE(gifcolor gifcolor.c qprintf.c snprintf.c)
 	include_directories(${GIF_INCLUDE_DIR})
 	TARGET_LINK_LIBRARIES(gifcolor ${GIF_LIBRARIES})
 ELSE()

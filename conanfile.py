@@ -1,5 +1,5 @@
 from conans import ConanFile
-import os
+import os, shutil
 from conans.tools import download, unzip, replace_in_file
 from conans import CMake, ConfigureEnvironment
 
@@ -14,22 +14,36 @@ class ZlibNgConan(ConanFile):
     default_options = "shared=False"
     url="http://github.com/lasote/conan-zlib-ng"
     license="https://sourceforge.net/p/giflib/code/ci/master/tree/COPYING"
-    exports = ["FindGIF.cmake"]
+    exports = ["FindGIF.cmake", "CMakeLists.txt", "getopt.c", "getopt.h", "stdbool.h", "unistd.h.in"]
+    # The exported files I took them from https://github.com/bjornblissing/osg-3rdparty-cmake/tree/master/giflib
     
     def config(self):
         try: # Try catch can be removed when conan 0.8 is released
-            del self.settings.compiler.libcxx
-            del self.settings.os.windows 
+            del self.settings.compiler.libcxx 
         except: 
             pass
+        
+        if self.settings.os == "Windows":
+            try:
+                self.options.remove("shared")
+            except: 
+                pass
+            self.ZIP_FOLDER_NAME = "giflib-%s-windows" % self.version
 
     def source(self):
-        zip_name = "%s.tar.gz" % self.ZIP_FOLDER_NAME
-        download("http://downloads.sourceforge.net/project/giflib/%s" % zip_name, zip_name)
+        if self.settings.os == "Windows":
+            zip_name = "giflib-%s-windows.zip" % self.version
+            download("http://blog.issamsoft.com/files/%s" % zip_name, zip_name)
+        else: 
+            zip_name = "%s.tar.gz" % self.ZIP_FOLDER_NAME
+            download("http://downloads.sourceforge.net/project/giflib/%s" % zip_name, zip_name)
         unzip(zip_name)
         os.unlink(zip_name)
         if self.settings.os != "Windows":
             self.run("chmod +x ./%s/autogen.sh" % self.ZIP_FOLDER_NAME)
+        else:
+            for filename in self.exports:
+                shutil.copy(filename, os.path.join(self.ZIP_FOLDER_NAME, filename))
             
 
     def build(self):
@@ -45,6 +59,14 @@ class ZlibNgConan(ConanFile):
             
             self.run("cd %s && %s ./configure" % (self.ZIP_FOLDER_NAME, env.command_line))
             self.run("cd %s && %s make" % (self.ZIP_FOLDER_NAME, env.command_line))
+        else:
+            cmake = CMake(self.settings)
+            self.run("cd %s && mkdir _build" % self.ZIP_FOLDER_NAME)
+            cd_build = "cd %s/_build" % self.ZIP_FOLDER_NAME
+            self.output.warn('%s && cmake .. %s' % (cd_build, cmake.command_line))
+            self.run('%s && cmake .. %s' % (cd_build, cmake.command_line))
+            self.output.warn("%s && cmake --build . %s" % (cd_build, cmake.build_config))
+            self.run("%s && cmake --build . %s" % (cd_build, cmake.build_config))
  
     def package(self):
         # Copy FindGIF.cmake to package
@@ -54,7 +76,7 @@ class ZlibNgConan(ConanFile):
         self.copy("*.h", "include", "%s" % (self.ZIP_FOLDER_NAME), keep_path=False)
         self.copy("*.h", "include", "%s" % ("_build"), keep_path=False)
 
-        if self.options.shared:
+        if not self.settings.os == "Windows" and self.options.shared:
             if self.settings.os == "Macos":
                 self.copy(pattern="*.dylib", dst="lib", keep_path=False)
                 self.copy(pattern="*getarg*.a", dst="lib", src=self.ZIP_FOLDER_NAME, keep_path=False)
@@ -64,6 +86,13 @@ class ZlibNgConan(ConanFile):
         else:
             self.copy(pattern="*.a", dst="lib", src="%s/_build" % self.ZIP_FOLDER_NAME, keep_path=False)
             self.copy(pattern="*.a", dst="lib", src=self.ZIP_FOLDER_NAME, keep_path=False)
+            self.copy(pattern="*.lib", dst="lib", src=self.ZIP_FOLDER_NAME, keep_path=False)
 
     def package_info(self):
-        self.cpp_info.libs = ['gif', 'getarg']
+        if self.settings.os == "Windows":
+            if self.settings.build_type == "Debug":
+                self.cpp_info.libs = ['libgifd', 'getargd']
+            else:
+                self.cpp_info.libs = ['libgif', 'getarg']
+        else:
+            self.cpp_info.libs = ['gif', 'getarg']
