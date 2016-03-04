@@ -57,6 +57,7 @@ class ZlibNgConan(ConanFile):
         if self.options.shared:
             if self.settings.os == "Macos":
                 self.copy(pattern="*.dylib", dst="lib", keep_path=False)
+                self.copy(pattern="*getarg*.a", dst="lib", src=self.ZIP_FOLDER_NAME, keep_path=False)
             else:
                 self.copy(pattern="*.so*", dst="lib", src=self.ZIP_FOLDER_NAME, keep_path=False)
                 self.copy(pattern="*getarg*.a*", dst="lib", src=self.ZIP_FOLDER_NAME, keep_path=False)
