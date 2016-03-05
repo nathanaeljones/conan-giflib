@@ -61,6 +61,7 @@ class ZlibNgConan(ConanFile):
         else:
             cmake = CMake(self.settings)
             self.run("cd %s && mkdir _build" % self.ZIP_FOLDER_NAME)
+            self.output.info("Created dir %s/_build" % self.ZIP_FOLDER_NAME)
             cd_build = "cd %s/_build" % self.ZIP_FOLDER_NAME
             self.output.warn('%s && cmake .. %s' % (cd_build, cmake.command_line))
             self.run('%s && cmake .. %s' % (cd_build, cmake.command_line))
