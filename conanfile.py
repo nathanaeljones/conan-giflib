@@ -64,15 +64,12 @@ class ZlibNgConan(ConanFile):
             self.run("cd %s && mkdir _build" % self.ZIP_FOLDER_NAME)
             self.output.info("Created dir %s/_build" % self.ZIP_FOLDER_NAME)
             cd_build = "cd %s/_build" % self.ZIP_FOLDER_NAME
-            self.output.warn('%s && cmake .. %s' % (cd_build, cmake.command_line))
-            self.run(cd_build)
-            stringout = StringIO()
-            self.run("cd", output=stringout)
-            self.output.info(stringout.getvalue())
-            self.run('%s && cmake .. %s' % (cd_build, cmake.command_line), output=stringout)
-            self.output.info(stringout.getvalue())
-            self.output.warn("%s && cmake --build . %s" % (cd_build, cmake.build_config))
-            self.run("%s && cmake --build . %s" % (cd_build, cmake.build_config))
+            
+            backup_dir = os.getcwd()
+            os.chdir("./%s/_build" % self.ZIP_FOLDER_NAME)
+            self.run('cmake .. %s' % cmake.command_line)
+            self.run("cmake --build . %s" % cmake.build_config)
+            os.chdir(backup_dir)
  
     def package(self):
         # Copy FindGIF.cmake to package
