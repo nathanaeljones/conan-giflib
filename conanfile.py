@@ -2,6 +2,7 @@ from conans import ConanFile
 import os, shutil
 from conans.tools import download, unzip, replace_in_file
 from conans import CMake, ConfigureEnvironment
+from cStringIO import StringIO
 
 
 class ZlibNgConan(ConanFile):
@@ -64,7 +65,12 @@ class ZlibNgConan(ConanFile):
             self.output.info("Created dir %s/_build" % self.ZIP_FOLDER_NAME)
             cd_build = "cd %s/_build" % self.ZIP_FOLDER_NAME
             self.output.warn('%s && cmake .. %s' % (cd_build, cmake.command_line))
-            self.run('%s && cmake .. %s' % (cd_build, cmake.command_line))
+            self.run(cd_build)
+            stringout = StringIO()
+            self.run("cd", output=stringout)
+            self.output.info(stringout.getvalue())
+            self.run('%s && cmake .. %s' % (cd_build, cmake.command_line), output=stringout)
+            self.output.info(stringout.getvalue())
             self.output.warn("%s && cmake --build . %s" % (cd_build, cmake.build_config))
             self.run("%s && cmake --build . %s" % (cd_build, cmake.build_config))
  
