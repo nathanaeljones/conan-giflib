@@ -10,8 +10,8 @@ class ZlibNgConan(ConanFile):
     ZIP_FOLDER_NAME = "giflib-%s" % version 
     generators = "cmake"
     settings = "os", "arch", "compiler", "build_type"
-    options = {"shared": [True, False]}
-    default_options = "shared=False"
+    options = {"shared": [True, False], "fPIC": [True, False]}
+    default_options = "shared=False", "fPIC=True"
     url="http://github.com/lasote/conan-zlib-ng"
     license="https://sourceforge.net/p/giflib/code/ci/master/tree/COPYING"
     exports = ["FindGIF.cmake", "CMakeLists.txt", "getopt.c", "getopt.h", "stdbool.h", "unistd.h.in", "giflib-%s-windows.zip" % version]
@@ -26,9 +26,11 @@ class ZlibNgConan(ConanFile):
         if self.settings.os == "Windows":
             try:
                 self.options.remove("shared")
+                self.options.remove("fPIC")
             except: 
                 pass
             self.ZIP_FOLDER_NAME = "giflib-%s-windows" % self.version
+
 
     def source(self):
         if self.settings.os == "Windows":
@@ -48,7 +50,12 @@ class ZlibNgConan(ConanFile):
     def build(self):
         if self.settings.os == "Linux" or self.settings.os == "Macos":
             env = ConfigureEnvironment(self.deps_cpp_info, self.settings)
-            self.run("cd %s && %s ./autogen.sh" % (self.ZIP_FOLDER_NAME, env.command_line))
+            if self.options.fPIC:
+                env_line = env.command_line.replace('CFLAGS=" "', 'CFLAGS="-fPIC"')
+            else:
+                env_line = env.command_line
+            
+            self.run("cd %s && %s ./autogen.sh" % (self.ZIP_FOLDER_NAME, env_line))
             self.run("chmod +x ./%s/configure" % self.ZIP_FOLDER_NAME)
             if self.settings.os == "Macos":
                 old_str = '-install_name \$rpath/\$soname'
@@ -56,8 +63,8 @@ class ZlibNgConan(ConanFile):
                 replace_in_file("./%s/configure" % self.ZIP_FOLDER_NAME, old_str, new_str)
 
             
-            self.run("cd %s && %s ./configure" % (self.ZIP_FOLDER_NAME, env.command_line))
-            self.run("cd %s && %s make" % (self.ZIP_FOLDER_NAME, env.command_line))
+            self.run("cd %s && %s ./configure" % (self.ZIP_FOLDER_NAME, env_line))
+            self.run("cd %s && %s make" % (self.ZIP_FOLDER_NAME, env_line))
         else:
             cmake = CMake(self.settings)
             self.run("cd %s && mkdir _build" % self.ZIP_FOLDER_NAME)
