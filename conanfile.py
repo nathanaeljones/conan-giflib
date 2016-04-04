@@ -14,7 +14,7 @@ class ZlibNgConan(ConanFile):
     default_options = "shared=False", "fPIC=True"
     url="http://github.com/lasote/conan-giflib"
     license="https://sourceforge.net/p/giflib/code/ci/master/tree/COPYING"
-    exports = ["FindGIF.cmake", "CMakeLists.txt", "getopt.c", "getopt.h", "stdbool.h", "unistd.h.in", "giflib-%s-windows.zip" % version]
+    exports = ["FindGIF.cmake", "CMakeLists.txt", "getopt.c", "getopt.h", "stdbool.h", "unistd.h.in"]
     # The exported files I took them from https://github.com/bjornblissing/osg-3rdparty-cmake/tree/master/giflib
     
     def config(self):
@@ -29,15 +29,15 @@ class ZlibNgConan(ConanFile):
                 self.options.remove("fPIC")
             except: 
                 pass
-            self.ZIP_FOLDER_NAME = "giflib-%s-windows" % self.version
+            # self.ZIP_FOLDER_NAME = "giflib-%s-windows" % self.version
 
 
     def source(self):
-        if self.settings.os == "Windows":
-            zip_name = "giflib-%s-windows.zip" % self.version
-        else: 
-            zip_name = "%s.tar.gz" % self.ZIP_FOLDER_NAME
-            download("http://downloads.sourceforge.net/project/giflib/%s" % zip_name, zip_name)
+#         if self.settings.os == "Windows":
+#             zip_name = "giflib-%s-windows.zip" % self.version
+#         else: 
+        zip_name = "%s.tar.gz" % self.ZIP_FOLDER_NAME
+        download("http://downloads.sourceforge.net/project/giflib/%s" % zip_name, zip_name)
         unzip(zip_name)
         self.output.info("Unzipped!")
         if self.settings.os != "Windows":
